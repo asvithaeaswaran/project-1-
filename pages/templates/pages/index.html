@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gelato AI | Smart Text & Document Assistant</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gpt: {
+                            sidebar: '#13151b',
+                            sidebarHover: '#1c1f26',
+                            main: '#1a1d24',
+                            card: '#232732',
+                            input: '#232732',
+                            border: '#2e3442',
+                            text: '#f1f3f7',
+                            muted: '#94a0b8',
+                            primary: '#ec4899',
+                            primaryHover: '#db2777',
+                            accent: '#a855f7',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Code Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        .light ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+
+        .markdown-body {
+            color: inherit;
+            line-height: 1.68;
+            font-size: 0.95rem;
+        }
+        .markdown-body p { margin-bottom: 0.85rem; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+        }
+        .light .markdown-body h1, .light .markdown-body h2, .light .markdown-body h3, .light .markdown-body h4 {
+            color: #0f172a;
+        }
+        .markdown-body h1 { font-size: 1.35rem; }
+        .markdown-body h2 { font-size: 1.18rem; }
+        .markdown-body h3 { font-size: 1.05rem; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.4rem; margin-bottom: 0.85rem; }
+        .markdown-body ol { list-style-type: decimal; padding-left: 1.4rem; margin-bottom: 0.85rem; }
+        .markdown-body li { margin-bottom: 0.25rem; }
+        .markdown-body blockquote {
+            border-left: 3px solid #ec4899;
+            padding-left: 0.85rem;
+            margin: 0.75rem 0;
+            color: #94a3b8;
+            font-style: italic;
+            background: rgba(236, 72, 153, 0.05);
+            border-radius: 0 0.375rem 0.375rem 0;
+        }
+        .markdown-body code:not(pre code) {
+            background-color: rgba(255, 255, 255, 0.12);
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+            font-family: ui-monospace, monospace;
+            color: #f472b6;
+        }
+        .light .markdown-body code:not(pre code) {
+            background-color: rgba(0, 0, 0, 0.06);
+            color: #db2777;
+        }
+        .markdown-body pre {
+            position: relative;
+            background-color: #0d1117 !important;
+            border-radius: 0.5rem;
+            margin: 0.85rem 0;
+            overflow-x: auto;
+            border: 1px solid #30363d;
+            padding: 1rem;
+        }
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+        .markdown-body th, .markdown-body td {
+            border: 1px solid #374151;
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+        }
+        .markdown-body th { background-color: rgba(255, 255, 255, 0.06); font-weight: 600; }
+
+        .typing-dot { animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        .dropzone-active {
+            border-color: #ec4899 !important;
+            background-color: rgba(236, 72, 153, 0.08) !important;
+        }
+    </style>
+</head>
+<body class="bg-gpt-main text-gpt-text antialiased transition-colors duration-200">
+    {% csrf_token %}
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="w-64 bg-gpt-sidebar flex-shrink-0 flex flex-col transition-all duration-300 z-30 border-r border-gpt-border max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:-translate-x-full">
+            <!-- Sidebar Header -->
+            <div class="p-3 flex items-center justify-between border-b border-gpt-border/60">
+                <a href="/" class="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gpt-sidebarHover text-sm font-semibold tracking-wide">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-sm shadow-md">
+                        <i class="fa-solid fa-ice-cream"></i>
+                    </div>
+                    <div>
+                        <div class="text-base font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-300 bg-clip-text text-transparent">Gelato</div>
+                        <div class="text-[10px] text-gpt-muted font-normal">Text & Document AI</div>
+                    </div>
+                </a>
+                <button id="close-sidebar-btn" class="md:hidden text-gpt-muted hover:text-white p-2">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- New Chat Button -->
+            <div class="px-3 pt-3">
+                <button id="new-chat-btn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gpt-card hover:bg-neutral-800 text-xs font-medium transition duration-150 border border-gpt-border shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-plus text-pink-400"></i>
+                        <span>New chat</span>
+                    </div>
+                    <span class="text-[10px] text-gpt-muted border border-gpt-border/80 px-1.5 py-0.5 rounded">Ctrl K</span>
+                </button>
+            </div>
+
+            <!-- Search History -->
+            <div class="px-3 pt-2">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-gpt-muted"></i>
+                    <input id="search-chat-input" type="text" placeholder="Search chats..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900/60 border border-gpt-border rounded-lg text-xs text-gpt-text placeholder-gpt-muted focus:outline-none focus:border-pink-500">
+                </div>
+            </div>
+
+            <!-- Conversations List -->
+            <div class="flex-1 overflow-y-auto px-2 py-3 space-y-1" id="conversations-list-container">
+                <div id="conversations-loading" class="text-center py-6 text-xs text-gpt-muted">
+                    <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Loading chats...
+                </div>
+                <div id="conversations-list" class="space-y-1"></div>
+            </div>
+
+            <!-- Uploaded Documents History Accordion / Quick List -->
+            <div class="p-2 border-t border-gpt-border/60">
+                <div class="flex items-center justify-between px-2 py-1 text-[11px] font-semibold text-gpt-muted uppercase tracking-wider">
+                    <span>Recent Files</span>
+                    <button id="sidebar-upload-btn" class="text-pink-400 hover:text-pink-300 transition text-xs" title="Upload new document">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                </div>
+                <div id="sidebar-docs-list" class="max-h-24 overflow-y-auto space-y-1 px-1 py-1 text-xs">
+                    <div class="text-[11px] text-gpt-muted text-center py-1">No attached files yet</div>
+                </div>
+            </div>
+
+            <!-- Sidebar User Profile Footer -->
+            <div class="p-2.5 border-t border-gpt-border bg-gpt-sidebar relative">
+                <div id="user-menu-btn" class="flex items-center justify-between p-2 rounded-xl hover:bg-gpt-sidebarHover cursor-pointer transition">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-xs text-white uppercase shadow">
+                            {{ username|slice:":2" }}
+                        </div>
+                        <div class="overflow-hidden">
+                            <span class="text-xs font-semibold truncate block">{{ username }}</span>
+                            <span class="text-[10px] text-emerald-400 block">&bull; Online</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-ellipsis-vertical text-gpt-muted text-xs"></i>
+                </div>
+
+                <!-- User Dropdown Popover -->
+                <div id="user-dropdown" class="hidden absolute bottom-14 left-2 right-2 bg-neutral-900 border border-gpt-border rounded-xl shadow-2xl p-1.5 space-y-1 z-50">
+                    <button id="open-settings-btn" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg hover:bg-neutral-800 transition text-left">
+                        <i class="fa-solid fa-gear text-pink-400 text-xs w-4"></i>
+                        <span>Settings & API Key</span>
+                    </button>
+                    <button id="theme-toggle-btn" class="w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg hover:bg-neutral-800 transition text-left">
+                        <div class="flex items-center gap-2.5">
+                            <i id="theme-icon" class="fa-solid fa-moon text-gpt-muted text-xs w-4"></i>
+                            <span id="theme-label">Dark Mode</span>
+                        </div>
+                        <span class="text-[10px] text-gpt-muted">Toggle</span>
+                    </button>
+                    <button id="clear-all-btn" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg hover:bg-neutral-800 text-rose-400 transition text-left">
+                        <i class="fa-solid fa-trash text-xs w-4"></i>
+                        <span>Clear all chats</span>
+                    </button>
+                    <div class="border-t border-neutral-800 my-1"></div>
+                    <a href="{% url 'logout' %}" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg hover:bg-neutral-800 text-gpt-text transition">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-gpt-muted text-xs w-4"></i>
+                        <span>Log out</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Sidebar Overlay for Mobile -->
+        <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/60 z-20 md:hidden"></div>
+
+        <!-- MAIN CHAT CONTAINER -->
+        <main class="flex-1 flex flex-col h-full bg-gpt-main relative overflow-hidden">
+            <!-- Top Navigation Bar -->
+            <header class="h-14 border-b border-gpt-border/40 flex items-center justify-between px-4 z-10 flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <button id="open-sidebar-btn" class="p-2 rounded-lg hover:bg-neutral-800 text-gpt-muted hover:text-white transition">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+                    <!-- Model Indicator Badge -->
+                    <div id="model-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800/80 hover:bg-neutral-700/80 border border-gpt-border/60 text-xs font-medium cursor-pointer transition">
+                        <span class="w-2 h-2 rounded-full bg-pink-400"></span>
+                        <span id="current-model-display">Gelato AI</span>
+                        <i class="fa-solid fa-gear text-[10px] text-gpt-muted ml-1"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="top-new-chat-btn" class="p-2 rounded-lg hover:bg-neutral-800 text-gpt-muted hover:text-white transition text-sm" title="New Chat">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat Content / Message Area -->
+            <div id="chat-messages-container" class="flex-1 overflow-y-auto px-4 py-6 md:px-0">
+                <!-- Welcome Screen -->
+                <div id="welcome-screen" class="max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[68vh] text-center px-4">
+                    <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-3xl mb-4 shadow-xl">
+                        <i class="fa-solid fa-ice-cream"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold mb-2 text-white">How can <span class="bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-300 bg-clip-text text-transparent">Gelato</span> help you today?</h1>
+                    <p class="text-gpt-muted text-sm mb-8 max-w-md">Send a text message or attach documents (PDF, Word, TXT, CSV) for instant analysis, coding, math, or summaries.</p>
+
+                    <!-- Starter Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-xl text-left">
+                        <div class="starter-card p-3.5 rounded-xl bg-gpt-card/70 hover:bg-neutral-700/80 border border-gpt-border cursor-pointer transition group" data-prompt="Explain quantum computing in simple terms with an example.">
+                            <div class="flex items-center gap-2 mb-1 text-pink-400 font-medium text-xs">
+                                <i class="fa-solid fa-lightbulb"></i>
+                                <span>Explain concept</span>
+                            </div>
+                            <p class="text-xs text-gpt-text group-hover:text-white line-clamp-2">Explain quantum computing in simple terms with an analogy</p>
+                        </div>
+
+                        <div class="starter-card p-3.5 rounded-xl bg-gpt-card/70 hover:bg-neutral-700/80 border border-gpt-border cursor-pointer transition group" data-prompt="Write a Python script to scrape website headlines using requests and BeautifulSoup.">
+                            <div class="flex items-center gap-2 mb-1 text-sky-400 font-medium text-xs">
+                                <i class="fa-solid fa-code"></i>
+                                <span>Code & Scripting</span>
+                            </div>
+                            <p class="text-xs text-gpt-text group-hover:text-white line-clamp-2">Write a Python script to scrape headlines using BeautifulSoup</p>
+                        </div>
+
+                        <div class="starter-card p-3.5 rounded-xl bg-gpt-card/70 hover:bg-neutral-700/80 border border-gpt-border cursor-pointer transition group" data-prompt="Draft a polite email asking a client for feedback on a recent software deliverable.">
+                            <div class="flex items-center gap-2 mb-1 text-amber-400 font-medium text-xs">
+                                <i class="fa-solid fa-envelope"></i>
+                                <span>Draft an email</span>
+                            </div>
+                            <p class="text-xs text-gpt-text group-hover:text-white line-clamp-2">Draft a polite email requesting client feedback on deliverables</p>
+                        </div>
+
+                        <div class="starter-card p-3.5 rounded-xl bg-gpt-card/70 hover:bg-neutral-700/80 border border-gpt-border cursor-pointer transition group" data-prompt="What are the top 5 programming trends in AI for 2026?">
+                            <div class="flex items-center gap-2 mb-1 text-purple-400 font-medium text-xs">
+                                <i class="fa-solid fa-rocket"></i>
+                                <span>Brainstorm & Trends</span>
+                            </div>
+                            <p class="text-xs text-gpt-text group-hover:text-white line-clamp-2">Explore the top AI development trends</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Stream List -->
+                <div id="messages-list" class="max-w-3xl mx-auto space-y-6 hidden"></div>
+
+                <!-- Typing indicator -->
+                <div id="typing-indicator" class="max-w-3xl mx-auto hidden mt-4">
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-500 flex items-center justify-center text-white text-xs flex-shrink-0 shadow">
+                            <i class="fa-solid fa-ice-cream"></i>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-neutral-800/80 border border-gpt-border px-4 py-3 rounded-2xl">
+                            <div class="w-2 h-2 rounded-full bg-pink-400 typing-dot"></div>
+                            <div class="w-2 h-2 rounded-full bg-purple-400 typing-dot"></div>
+                            <div class="w-2 h-2 rounded-full bg-indigo-400 typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="messages-bottom-anchor" class="h-4"></div>
+            </div>
+
+            <!-- Scroll to bottom button -->
+            <button id="scroll-bottom-btn" class="hidden absolute bottom-28 right-8 z-10 w-9 h-9 rounded-full bg-neutral-800 border border-gpt-border shadow-lg flex items-center justify-center text-gpt-muted hover:text-white hover:bg-neutral-700 transition">
+                <i class="fa-solid fa-arrow-down text-xs"></i>
+            </button>
+
+            <!-- Bottom Prompt Input Area with Attachment Chip & Button -->
+            <div class="border-t border-gpt-border/30 bg-gpt-main/90 backdrop-blur px-4 pt-3 pb-4 flex-shrink-0">
+                <div class="max-w-3xl mx-auto">
+                    <!-- Pending Attached File Banner -->
+                    <div id="pending-file-container" class="hidden mb-2 flex items-center gap-2">
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800 border border-pink-500/40 text-xs text-gpt-text shadow-sm">
+                            <i class="fa-solid fa-file-lines text-pink-400"></i>
+                            <span id="pending-file-name" class="font-medium truncate max-w-xs">file.pdf</span>
+                            <span id="pending-file-size" class="text-[10px] text-gpt-muted">(120 KB)</span>
+                            <button type="button" id="remove-pending-file-btn" class="text-gpt-muted hover:text-rose-400 transition ml-1" title="Remove attachment">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <form id="chat-form" class="relative">
+                        <!-- Hidden File Input -->
+                        <input type="file" id="file-upload-input" class="hidden" accept=".pdf,.docx,.doc,.txt,.csv,.md,.json,.py,.js,.html,.css,.sql">
+
+                        <div id="input-capsule" class="flex items-end bg-gpt-input border border-gpt-border/80 focus-within:border-pink-500/80 rounded-3xl p-2 shadow-md transition">
+                            <!-- Attachment Button -->
+                            <button
+                                type="button"
+                                id="attach-file-btn"
+                                class="w-8 h-8 rounded-full text-gpt-muted hover:text-pink-400 hover:bg-neutral-800/80 flex items-center justify-center flex-shrink-0 transition duration-150"
+                                title="Attach Document (PDF, DOCX, TXT, CSV)"
+                            >
+                                <i class="fa-solid fa-paperclip text-sm"></i>
+                            </button>
+
+                            <!-- Message Textarea -->
+                            <textarea
+                                id="message-input"
+                                rows="1"
+                                placeholder="Message Gelato... (or attach a document)"
+                                class="w-full bg-transparent px-3 py-1.5 text-sm text-gpt-text placeholder-gpt-muted resize-none focus:outline-none max-h-48 overflow-y-auto"
+                                style="min-height: 24px;"
+                            ></textarea>
+
+                            <!-- Send Button -->
+                            <button
+                                type="submit"
+                                id="send-message-btn"
+                                disabled
+                                class="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 text-white disabled:bg-none disabled:bg-neutral-700 disabled:text-neutral-500 flex items-center justify-center flex-shrink-0 ml-1 transition duration-150 shadow"
+                            >
+                                <i class="fa-solid fa-arrow-up text-sm font-bold"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <p class="text-center text-[11px] text-gpt-muted mt-2">Gelato can make mistakes. Check important info.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- SETTINGS / API KEY MODAL -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-neutral-900 border border-gpt-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-gpt-border flex items-center justify-between">
+                <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-pink-400"></i>
+                    <span>Gelato AI Settings & API Key</span>
+                </h3>
+                <button id="close-settings-btn" class="text-gpt-muted hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 text-xs">
+                <!-- Provider Quick Pick -->
+                <div>
+                    <label class="block font-medium text-gpt-text mb-2">Select Provider</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" class="provider-preset-btn p-2.5 rounded-lg border border-gpt-border bg-neutral-800 hover:border-pink-400 text-left transition" data-provider="groq" data-url="https://api.groq.com/openai/v1" data-model="openai/gpt-oss-120b">
+                            <div class="font-semibold text-white flex items-center gap-1.5"><i class="fa-solid fa-bolt text-amber-400"></i> Groq (100% Free)</div>
+                            <div class="text-[10px] text-gpt-muted">Ultra fast 120B Model</div>
+                        </button>
+                        <button type="button" class="provider-preset-btn p-2.5 rounded-lg border border-gpt-border bg-neutral-800 hover:border-pink-400 text-left transition" data-provider="openai" data-url="https://api.openai.com/v1" data-model="gpt-4o-mini">
+                            <div class="font-semibold text-white flex items-center gap-1.5"><i class="fa-solid fa-circle-notch text-emerald-400"></i> OpenAI</div>
+                            <div class="text-[10px] text-gpt-muted">GPT-4o, GPT-4o-mini</div>
+                        </button>
+                        <button type="button" class="provider-preset-btn p-2.5 rounded-lg border border-gpt-border bg-neutral-800 hover:border-pink-400 text-left transition" data-provider="gemini" data-url="https://generativelanguage.googleapis.com/v1beta/openai/" data-model="gemini-2.0-flash">
+                            <div class="font-semibold text-white flex items-center gap-1.5"><i class="fa-solid fa-sparkles text-sky-400"></i> Google Gemini</div>
+                            <div class="text-[10px] text-gpt-muted">Free Gemini 2.0 Flash</div>
+                        </button>
+                        <button type="button" class="provider-preset-btn p-2.5 rounded-lg border border-gpt-border bg-neutral-800 hover:border-pink-400 text-left transition" data-provider="openrouter" data-url="https://openrouter.ai/api/v1" data-model="meta-llama/llama-3.3-70b-instruct:free">
+                            <div class="font-semibold text-white flex items-center gap-1.5"><i class="fa-solid fa-network-wired text-purple-400"></i> OpenRouter</div>
+                            <div class="text-[10px] text-gpt-muted">DeepSeek, Llama 3, Free</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="font-medium text-gpt-text">API Key</label>
+                        <a id="get-key-link" href="https://console.groq.com/keys" target="_blank" class="text-[11px] text-pink-400 hover:underline">Get Free Key &rarr;</a>
+                    </div>
+                    <div class="relative">
+                        <input id="setting-api-key" type="password" placeholder="Paste your API key (e.g. gsk_... or sk-...)" class="w-full bg-neutral-800 border border-gpt-border rounded-lg px-3 py-2 text-gpt-text placeholder-gpt-muted focus:outline-none focus:border-pink-400 pr-10">
+                        <button type="button" id="toggle-key-visibility" class="absolute right-3 top-2.5 text-gpt-muted hover:text-white">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium text-gpt-text mb-1">Model Name</label>
+                        <input id="setting-model" type="text" placeholder="e.g. openai/gpt-oss-120b or gpt-4o-mini" class="w-full bg-neutral-800 border border-gpt-border rounded-lg px-3 py-2 text-gpt-text placeholder-gpt-muted focus:outline-none focus:border-pink-400">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gpt-text mb-1">Base URL</label>
+                        <input id="setting-base-url" type="text" placeholder="https://api.groq.com/openai/v1" class="w-full bg-neutral-800 border border-gpt-border rounded-lg px-3 py-2 text-gpt-text placeholder-gpt-muted focus:outline-none focus:border-pink-400">
+                    </div>
+                </div>
+
+                <div id="settings-status-msg" class="hidden p-2 rounded-lg text-center font-medium"></div>
+            </div>
+
+            <div class="p-4 border-t border-gpt-border bg-neutral-900/50 flex justify-between items-center text-xs">
+                <button id="clear-api-key-btn" class="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-rose-400 font-medium transition">Remove Key</button>
+                <div class="flex gap-2">
+                    <button id="close-settings-modal-btn" class="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-gpt-muted hover:text-white transition">Cancel</button>
+                    <button id="save-settings-btn" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold transition">Save & Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RENAME CONVERSATION MODAL -->
+    <div id="rename-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-neutral-900 border border-gpt-border rounded-2xl w-full max-w-sm shadow-2xl p-5">
+            <h3 class="text-sm font-semibold text-white mb-3">Rename Conversation</h3>
+            <input id="rename-input" type="text" class="w-full bg-neutral-800 border border-gpt-border rounded-lg px-3 py-2 text-xs text-gpt-text focus:outline-none focus:border-pink-400 mb-4">
+            <div class="flex justify-end gap-2 text-xs">
+                <button id="cancel-rename-btn" class="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-gpt-muted hover:text-white transition">Cancel</button>
+                <button id="confirm-rename-btn" class="px-4 py-1.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-medium transition">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        marked.setOptions({
+            highlight: function(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        let currentConversationId = null;
+        let conversationsList = [];
+        let isSendingMessage = false;
+        let pendingAttachedFile = null;
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        }
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const openSidebarBtn = document.getElementById('open-sidebar-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const topNewChatBtn = document.getElementById('top-new-chat-btn');
+        const searchInput = document.getElementById('search-chat-input');
+        const conversationsContainer = document.getElementById('conversations-list');
+        const conversationsLoading = document.getElementById('conversations-loading');
+        const sidebarDocsList = document.getElementById('sidebar-docs-list');
+        const sidebarUploadBtn = document.getElementById('sidebar-upload-btn');
+        
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const messagesList = document.getElementById('messages-list');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const chatMessagesContainer = document.getElementById('chat-messages-container');
+        const scrollBottomBtn = document.getElementById('scroll-bottom-btn');
+        
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-message-btn');
+        const fileUploadInput = document.getElementById('file-upload-input');
+        const attachFileBtn = document.getElementById('attach-file-btn');
+        const pendingFileContainer = document.getElementById('pending-file-container');
+        const pendingFileName = document.getElementById('pending-file-name');
+        const pendingFileSize = document.getElementById('pending-file-size');
+        const removePendingFileBtn = document.getElementById('remove-pending-file-btn');
+        const inputCapsule = document.getElementById('input-capsule');
+        
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeLabel = document.getElementById('theme-label');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        
+        const settingsModal = document.getElementById('settings-modal');
+        const openSettingsBtn = document.getElementById('open-settings-btn');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const closeSettingsModalBtn = document.getElementById('close-settings-modal-btn');
+        const modelBadge = document.getElementById('model-badge');
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+        const clearApiKeyBtn = document.getElementById('clear-api-key-btn');
+        const settingApiKey = document.getElementById('setting-api-key');
+        const settingModel = document.getElementById('setting-model');
+        const settingBaseUrl = document.getElementById('setting-base-url');
+        const toggleKeyVisibility = document.getElementById('toggle-key-visibility');
+        const currentModelDisplay = document.getElementById('current-model-display');
+        const getKeyLink = document.getElementById('get-key-link');
+
+        const renameModal = document.getElementById('rename-modal');
+        const renameInput = document.getElementById('rename-input');
+        const confirmRenameBtn = document.getElementById('confirm-rename-btn');
+        const cancelRenameBtn = document.getElementById('cancel-rename-btn');
+        let pendingRenameId = null;
+
+        // Auto-resize input
+        function updateSendButtonState() {
+            const hasText = Boolean(messageInput.value.trim());
+            const hasFile = Boolean(pendingAttachedFile);
+            sendBtn.disabled = (!hasText && !hasFile) || isSendingMessage;
+        }
+
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            updateSendButtonState();
+        });
+
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!sendBtn.disabled) {
+                    chatForm.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                createNewChat();
+            }
+        });
+
+        // Attach file handlers
+        attachFileBtn.addEventListener('click', () => fileUploadInput.click());
+        sidebarUploadBtn.addEventListener('click', () => fileUploadInput.click());
+
+        fileUploadInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                const file = this.files[0];
+                setPendingFile(file);
+            }
+        });
+
+        function setPendingFile(file) {
+            pendingAttachedFile = file;
+            pendingFileName.textContent = file.name;
+            const sz = file.size >= 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${file.size} B`;
+            pendingFileSize.textContent = `(${sz})`;
+            pendingFileContainer.classList.remove('hidden');
+            updateSendButtonState();
+            messageInput.focus();
+        }
+
+        removePendingFileBtn.addEventListener('click', () => {
+            pendingAttachedFile = null;
+            fileUploadInput.value = '';
+            pendingFileContainer.classList.add('hidden');
+            updateSendButtonState();
+        });
+
+        // Drag and drop onto chat input
+        ['dragenter', 'dragover'].forEach(eventName => {
+            inputCapsule.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                inputCapsule.classList.add('dropzone-active');
+            });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            inputCapsule.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                inputCapsule.classList.remove('dropzone-active');
+            });
+        });
+        inputCapsule.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                setPendingFile(files[0]);
+            }
+        });
+
+        function toggleSidebar(open) {
+            if (open) {
+                sidebar.classList.remove('max-md:-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('max-md:-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            }
+        }
+        openSidebarBtn.addEventListener('click', () => toggleSidebar(true));
+        closeSidebarBtn.addEventListener('click', () => toggleSidebar(false));
+        sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
+
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+        document.addEventListener('click', () => {
+            userDropdown.classList.add('hidden');
+        });
+
+        let isDarkMode = true;
+        themeToggleBtn.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                themeIcon.className = 'fa-solid fa-moon text-gpt-muted text-xs w-4';
+                themeLabel.textContent = 'Dark Mode';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                themeIcon.className = 'fa-solid fa-sun text-amber-400 text-xs w-4';
+                themeLabel.textContent = 'Light Mode';
+            }
+        });
+
+        chatMessagesContainer.addEventListener('scroll', () => {
+            const distance = chatMessagesContainer.scrollHeight - chatMessagesContainer.scrollTop - chatMessagesContainer.clientHeight;
+            if (distance > 150) {
+                scrollBottomBtn.classList.remove('hidden');
+            } else {
+                scrollBottomBtn.classList.add('hidden');
+            }
+        });
+        scrollBottomBtn.addEventListener('click', scrollToBottom);
+
+        function scrollToBottom() {
+            chatMessagesContainer.scrollTo({
+                top: chatMessagesContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        async function fetchConversations() {
+            try {
+                conversationsLoading.classList.remove('hidden');
+                const res = await fetch('/api/conversations/');
+                if (!res.ok) throw new Error('Failed to load conversations');
+                const data = await res.json();
+                conversationsList = data.conversations || [];
+                renderConversationsList(conversationsList);
+            } catch (err) {
+                console.error(err);
+                conversationsContainer.innerHTML = `<div class="text-xs text-rose-400 text-center py-4">Error loading history</div>`;
+            } finally {
+                conversationsLoading.classList.add('hidden');
+            }
+        }
+
+        function renderConversationsList(list) {
+            conversationsContainer.innerHTML = '';
+            if (list.length === 0) {
+                conversationsContainer.innerHTML = `<div class="text-xs text-gpt-muted text-center py-6">No chat history yet</div>`;
+                return;
+            }
+
+            list.forEach(conv => {
+                const isActive = conv.id === currentConversationId;
+                const item = document.createElement('div');
+                item.className = `group relative flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition ${isActive ? 'bg-gpt-sidebarHover text-white font-medium border border-gpt-border' : 'text-gpt-text hover:bg-neutral-800/60'}`;
+                item.dataset.id = conv.id;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden flex-1 pr-2">
+                        <i class="fa-regular fa-message text-gpt-muted text-[11px] flex-shrink-0"></i>
+                        <span class="truncate chat-title">${escapeHtml(conv.title)}</span>
+                    </div>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button class="rename-chat-btn p-1 hover:text-white text-gpt-muted" title="Rename">
+                            <i class="fa-solid fa-pen text-[10px]"></i>
+                        </button>
+                        <button class="delete-chat-btn p-1 hover:text-rose-400 text-gpt-muted" title="Delete">
+                            <i class="fa-solid fa-trash text-[10px]"></i>
+                        </button>
+                    </div>
+                `;
+
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.rename-chat-btn') || e.target.closest('.delete-chat-btn')) return;
+                    loadConversation(conv.id);
+                    if (window.innerWidth < 768) toggleSidebar(false);
+                });
+
+                item.querySelector('.rename-chat-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openRenameModal(conv.id, conv.title);
+                });
+
+                item.querySelector('.delete-chat-btn').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Delete "${conv.title}"?`)) {
+                        await deleteConversation(conv.id);
+                    }
+                });
+
+                conversationsContainer.appendChild(item);
+            });
+        }
+
+        async function fetchDocuments() {
+            try {
+                const res = await fetch('/api/documents/');
+                const data = await res.json();
+                const docs = data.documents || [];
+                sidebarDocsList.innerHTML = '';
+                if (docs.length === 0) {
+                    sidebarDocsList.innerHTML = `<div class="text-[11px] text-gpt-muted text-center py-1">No attached files</div>`;
+                    return;
+                }
+                docs.slice(0, 5).forEach(doc => {
+                    const el = document.createElement('div');
+                    el.className = 'flex items-center justify-between p-1.5 rounded-lg bg-neutral-900/60 hover:bg-neutral-800 text-[11px] cursor-pointer text-gpt-text transition';
+                    el.innerHTML = `
+                        <div class="flex items-center gap-1.5 truncate flex-1 pr-1">
+                            <i class="fa-solid fa-file text-pink-400 text-[10px]"></i>
+                            <span class="truncate" title="${escapeHtml(doc.original_filename)}">${escapeHtml(doc.original_filename)}</span>
+                        </div>
+                        <span class="text-[9px] text-gpt-muted flex-shrink-0">${doc.formatted_size}</span>
+                    `;
+                    el.addEventListener('click', () => {
+                        messageInput.value = `Please analyze and summarize "${doc.original_filename}".`;
+                        updateSendButtonState();
+                        messageInput.focus();
+                    });
+                    sidebarDocsList.appendChild(el);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (!query) {
+                renderConversationsList(conversationsList);
+            } else {
+                const filtered = conversationsList.filter(c => c.title.toLowerCase().includes(query));
+                renderConversationsList(filtered);
+            }
+        });
+
+        async function createNewChat() {
+            currentConversationId = null;
+            messagesList.innerHTML = '';
+            messagesList.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            pendingAttachedFile = null;
+            fileUploadInput.value = '';
+            pendingFileContainer.classList.add('hidden');
+            updateSendButtonState();
+            renderConversationsList(conversationsList);
+            messageInput.focus();
+        }
+        newChatBtn.addEventListener('click', createNewChat);
+        topNewChatBtn.addEventListener('click', createNewChat);
+
+        async function loadConversation(id) {
+            try {
+                currentConversationId = id;
+                renderConversationsList(conversationsList);
+                welcomeScreen.classList.add('hidden');
+                messagesList.classList.remove('hidden');
+                messagesList.innerHTML = `<div class="text-center text-xs text-gpt-muted py-8"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading messages...</div>`;
+
+                const res = await fetch(`/api/conversations/${id}/`);
+                if (!res.ok) throw new Error('Failed to load conversation');
+                const data = await res.json();
+
+                messagesList.innerHTML = '';
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        appendMessageBubble(msg.role, msg.content, msg.id, msg.attachments, false);
+                    });
+                } else {
+                    welcomeScreen.classList.remove('hidden');
+                    messagesList.classList.add('hidden');
+                }
+                scrollToBottom();
+            } catch (err) {
+                console.error(err);
+                messagesList.innerHTML = `<div class="text-center text-xs text-rose-400 py-8">Failed to load chat history.</div>`;
+            }
+        }
+
+        function appendMessageBubble(role, content, messageId = null, attachments = [], animate = true) {
+            welcomeScreen.classList.add('hidden');
+            messagesList.classList.remove('hidden');
+
+            const isUser = role === 'user';
+            const msgEl = document.createElement('div');
+            msgEl.className = `flex items-start gap-4 message-item ${animate ? 'animate-fadeIn' : ''}`;
+            msgEl.dataset.role = role;
+            if (messageId) msgEl.dataset.id = messageId;
+
+            const avatar = isUser ? `
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold uppercase flex-shrink-0 shadow">
+                    {{ username|slice:":2" }}
+                </div>
+            ` : `
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs flex-shrink-0 shadow">
+                    <i class="fa-solid fa-ice-cream"></i>
+                </div>
+            `;
+
+            let attachmentsHtml = '';
+            if (attachments && attachments.length > 0) {
+                attachmentsHtml = '<div class="flex flex-wrap gap-2 mb-2">';
+                attachments.forEach(att => {
+                    attachmentsHtml += `
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs text-pink-300 font-medium">
+                            <i class="fa-solid fa-file text-[11px]"></i>
+                            <span>${escapeHtml(att.name)}</span>
+                            <span class="text-[10px] text-gpt-muted">(${att.size})</span>
+                        </div>
+                    `;
+                });
+                attachmentsHtml += '</div>';
+            }
+
+            const parsedContent = isUser ? escapeHtml(content).replace(/\n/g, '<br>') : marked.parse(content);
+
+            const actions = isUser ? '' : `
+                <div class="flex items-center gap-2 mt-2 pt-2 border-t border-gpt-border/30 text-gpt-muted text-xs">
+                    <button class="copy-msg-btn hover:text-white transition flex items-center gap-1" title="Copy message">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy</span>
+                    </button>
+                    <button class="regen-msg-btn hover:text-white transition flex items-center gap-1 ml-2" title="Regenerate response">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Regenerate</span>
+                    </button>
+                </div>
+            `;
+
+            msgEl.innerHTML = `
+                ${avatar}
+                <div class="flex-1 overflow-hidden">
+                    <div class="text-[11px] font-semibold mb-1 text-pink-400 uppercase tracking-wider">${isUser ? 'You' : 'Gelato'}</div>
+                    ${attachmentsHtml}
+                    <div class="markdown-body select-text">${parsedContent}</div>
+                    ${actions}
+                </div>
+            `;
+
+            msgEl.querySelectorAll('pre').forEach(pre => {
+                const copyCodeBtn = document.createElement('button');
+                copyCodeBtn.className = 'absolute top-2 right-2 px-2 py-1 bg-neutral-800/90 hover:bg-neutral-700 text-gpt-muted hover:text-white rounded text-[11px] flex items-center gap-1 border border-neutral-700 transition z-10';
+                copyCodeBtn.innerHTML = '<i class="fa-regular fa-copy"></i> <span>Copy</span>';
+                copyCodeBtn.addEventListener('click', () => {
+                    const code = pre.querySelector('code')?.innerText || pre.innerText;
+                    navigator.clipboard.writeText(code);
+                    copyCodeBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> <span>Copied!</span>';
+                    setTimeout(() => {
+                        copyCodeBtn.innerHTML = '<i class="fa-regular fa-copy"></i> <span>Copy</span>';
+                    }, 2000);
+                });
+                pre.appendChild(copyCodeBtn);
+            });
+
+            const copyMsgBtn = msgEl.querySelector('.copy-msg-btn');
+            if (copyMsgBtn) {
+                copyMsgBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(content);
+                    copyMsgBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> <span>Copied!</span>';
+                    setTimeout(() => {
+                        copyMsgBtn.innerHTML = '<i class="fa-regular fa-copy"></i> <span>Copy</span>';
+                    }, 2000);
+                });
+            }
+
+            const regenBtn = msgEl.querySelector('.regen-msg-btn');
+            if (regenBtn) {
+                regenBtn.addEventListener('click', () => {
+                    if (currentConversationId) regenerateLastResponse(currentConversationId);
+                });
+            }
+
+            messagesList.appendChild(msgEl);
+            scrollToBottom();
+            return msgEl;
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = messageInput.value.trim();
+            const fileToSend = pendingAttachedFile;
+
+            if (!text && !fileToSend) return;
+            if (isSendingMessage) return;
+
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            pendingAttachedFile = null;
+            fileUploadInput.value = '';
+            pendingFileContainer.classList.add('hidden');
+            sendBtn.disabled = true;
+            isSendingMessage = true;
+
+            if (!currentConversationId) {
+                try {
+                    const res = await fetch('/api/conversations/create/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ title: 'New Chat' })
+                    });
+                    const convData = await res.json();
+                    currentConversationId = convData.id;
+                    conversationsList.unshift({
+                        id: convData.id,
+                        title: convData.title,
+                        created_at: convData.created_at,
+                        updated_at: convData.updated_at,
+                        message_count: 0
+                    });
+                    renderConversationsList(conversationsList);
+                } catch (err) {
+                    console.error('Failed to create conversation', err);
+                    isSendingMessage = false;
+                    return;
+                }
+            }
+
+            const localAttachments = fileToSend ? [{
+                name: fileToSend.name,
+                size: fileToSend.size >= 1024 ? `${(fileToSend.size / 1024).toFixed(1)} KB` : `${fileToSend.size} B`
+            }] : [];
+
+            appendMessageBubble('user', text || `Please review attached document: ${fileToSend.name}`, null, localAttachments);
+            typingIndicator.classList.remove('hidden');
+            scrollToBottom();
+
+            try {
+                let responseData;
+                if (fileToSend) {
+                    const formData = new FormData();
+                    formData.append('content', text || `Please analyze the attached document.`);
+                    formData.append('file', fileToSend);
+
+                    const res = await fetch(`/api/conversations/${currentConversationId}/messages/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: formData
+                    });
+                    responseData = await res.json();
+                    fetchDocuments();
+                } else {
+                    const res = await fetch(`/api/conversations/${currentConversationId}/messages/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ content: text })
+                    });
+                    responseData = await res.json();
+                }
+
+                typingIndicator.classList.add('hidden');
+
+                if (responseData.assistant_message) {
+                    appendMessageBubble('assistant', responseData.assistant_message.content, responseData.assistant_message.id);
+                    if (responseData.conversation_title) {
+                        const target = conversationsList.find(c => c.id === currentConversationId);
+                        if (target) {
+                            target.title = responseData.conversation_title;
+                            renderConversationsList(conversationsList);
+                        }
+                    }
+                } else {
+                    appendMessageBubble('assistant', `⚠️ **Error**: ${responseData.error || 'Failed to get response.'}`);
+                }
+            } catch (err) {
+                console.error(err);
+                typingIndicator.classList.add('hidden');
+                appendMessageBubble('assistant', '⚠️ **Connection Error**: Unable to reach the server.');
+            } finally {
+                isSendingMessage = false;
+                updateSendButtonState();
+                messageInput.focus();
+            }
+        });
+
+        async function regenerateLastResponse(conversationId) {
+            if (isSendingMessage) return;
+            isSendingMessage = true;
+            typingIndicator.classList.remove('hidden');
+            scrollToBottom();
+
+            try {
+                const res = await fetch(`/api/conversations/${conversationId}/regenerate/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                const data = await res.json();
+                typingIndicator.classList.add('hidden');
+                if (res.ok && data.assistant_message) {
+                    const assistantBubbles = messagesList.querySelectorAll('[data-role="assistant"]');
+                    if (assistantBubbles.length > 0) {
+                        assistantBubbles[assistantBubbles.length - 1].remove();
+                    }
+                    appendMessageBubble('assistant', data.assistant_message.content, data.assistant_message.id);
+                }
+            } catch (err) {
+                console.error(err);
+                typingIndicator.classList.add('hidden');
+            } finally {
+                isSendingMessage = false;
+            }
+        }
+
+        async function deleteConversation(id) {
+            try {
+                const res = await fetch(`/api/conversations/${id}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                if (res.ok) {
+                    conversationsList = conversationsList.filter(c => c.id !== id);
+                    if (currentConversationId === id) {
+                        createNewChat();
+                    } else {
+                        renderConversationsList(conversationsList);
+                    }
+                }
+            } catch (err) {
+                console.error('Delete error', err);
+            }
+        }
+
+        clearAllBtn.addEventListener('click', async () => {
+            if (confirm('Are you sure you want to delete all conversations? This cannot be undone.')) {
+                try {
+                    const res = await fetch('/api/conversations/clear/', {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+                    if (res.ok) {
+                        conversationsList = [];
+                        createNewChat();
+                    }
+                } catch (err) {
+                    console.error('Clear chats error', err);
+                }
+            }
+        });
+
+        function openRenameModal(id, currentTitle) {
+            pendingRenameId = id;
+            renameInput.value = currentTitle;
+            renameModal.classList.remove('hidden');
+            renameInput.focus();
+        }
+        cancelRenameBtn.addEventListener('click', () => {
+            renameModal.classList.add('hidden');
+            pendingRenameId = null;
+        });
+        confirmRenameBtn.addEventListener('click', async () => {
+            const newTitle = renameInput.value.trim();
+            if (!newTitle || !pendingRenameId) return;
+
+            try {
+                const res = await fetch(`/api/conversations/${pendingRenameId}/rename/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ title: newTitle })
+                });
+                if (res.ok) {
+                    const item = conversationsList.find(c => c.id === pendingRenameId);
+                    if (item) item.title = newTitle;
+                    renderConversationsList(conversationsList);
+                    renameModal.classList.add('hidden');
+                }
+            } catch (err) {
+                console.error('Rename error', err);
+            }
+        });
+
+        document.querySelectorAll('.starter-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const prompt = card.dataset.prompt;
+                messageInput.value = prompt;
+                updateSendButtonState();
+                chatForm.dispatchEvent(new Event('submit'));
+            });
+        });
+
+        async function openSettings() {
+            settingsModal.classList.remove('hidden');
+            try {
+                const res = await fetch('/api/settings/');
+                const data = await res.json();
+                if (data.masked_api_key) {
+                    settingApiKey.placeholder = `Configured (${data.masked_api_key})`;
+                }
+                settingModel.value = data.model || '';
+                settingBaseUrl.value = data.base_url || '';
+                currentModelDisplay.textContent = data.has_api_key ? `Gelato (${data.model ? data.model.split('/').pop() : '120B'})` : 'Gelato AI';
+            } catch (err) {
+                console.error('Settings load error', err);
+            }
+        }
+        openSettingsBtn.addEventListener('click', openSettings);
+        modelBadge.addEventListener('click', openSettings);
+        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+        closeSettingsModalBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+        document.querySelectorAll('.provider-preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const provider = btn.dataset.provider;
+                const url = btn.dataset.url;
+                const model = btn.dataset.model;
+                settingBaseUrl.value = url;
+                settingModel.value = model;
+                if (provider === 'groq') {
+                    getKeyLink.href = 'https://console.groq.com/keys';
+                    getKeyLink.textContent = 'Get Free Groq Key \u2192';
+                    settingApiKey.placeholder = 'gsk_...';
+                } else if (provider === 'openai') {
+                    getKeyLink.href = 'https://platform.openai.com/api-keys';
+                    getKeyLink.textContent = 'Get OpenAI Key \u2192';
+                    settingApiKey.placeholder = 'sk-...';
+                } else if (provider === 'gemini') {
+                    getKeyLink.href = 'https://aistudio.google.com';
+                    getKeyLink.textContent = 'Get Free Gemini Key \u2192';
+                    settingApiKey.placeholder = 'AIza...';
+                } else if (provider === 'openrouter') {
+                    getKeyLink.href = 'https://openrouter.ai/keys';
+                    getKeyLink.textContent = 'Get OpenRouter Key \u2192';
+                    settingApiKey.placeholder = 'sk-or-...';
+                }
+            });
+        });
+
+        toggleKeyVisibility.addEventListener('click', () => {
+            const isPassword = settingApiKey.type === 'password';
+            settingApiKey.type = isPassword ? 'text' : 'password';
+            toggleKeyVisibility.innerHTML = isPassword ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        });
+
+        saveSettingsBtn.addEventListener('click', async () => {
+            const payload = {
+                api_key: settingApiKey.value.trim(),
+                model: settingModel.value.trim(),
+                base_url: settingBaseUrl.value.trim()
+            };
+            try {
+                const res = await fetch('/api/settings/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const statusMsg = document.getElementById('settings-status-msg');
+                    statusMsg.className = 'p-2 rounded-lg text-center font-medium bg-purple-950 text-pink-300 border border-purple-800';
+                    statusMsg.textContent = 'Settings saved and applied successfully!';
+                    statusMsg.classList.remove('hidden');
+                    setTimeout(() => {
+                        statusMsg.classList.add('hidden');
+                        settingsModal.classList.add('hidden');
+                    }, 1000);
+                    currentModelDisplay.textContent = payload.api_key ? `Gelato (${payload.model ? payload.model.split('/').pop() : '120B'})` : 'Gelato AI';
+                }
+            } catch (err) {
+                console.error('Save settings error', err);
+            }
+        });
+
+        clearApiKeyBtn.addEventListener('click', async () => {
+            try {
+                await fetch('/api/settings/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ api_key: '', base_url: '', model: '' })
+                });
+                settingApiKey.value = '';
+                settingApiKey.placeholder = 'Paste your API key...';
+                settingBaseUrl.value = '';
+                settingModel.value = '';
+                currentModelDisplay.textContent = 'Gelato AI';
+                alert('API Key removed.');
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchConversations();
+            fetchDocuments();
+        });
+    </script>
+</body>
+</html>

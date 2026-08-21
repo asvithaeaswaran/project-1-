@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up - ChatGPT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gpt: {
+                            sidebar: '#171717',
+                            main: '#212121',
+                            card: '#2f2f2f',
+                            border: '#3c3c3c',
+                            text: '#ececec',
+                            muted: '#9e9e9e',
+                            green: '#10a37f',
+                            greenHover: '#1a7f64',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gpt-main text-gpt-text min-h-screen flex flex-col justify-between items-center px-4 py-8 antialiased">
+    <!-- Header Logo -->
+    <header class="w-full max-w-sm flex items-center justify-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-full bg-gpt-green flex items-center justify-center text-white text-sm shadow-md">
+            <i class="fa-solid fa-brain"></i>
+        </div>
+        <span class="text-xl font-bold tracking-tight text-white">ChatGPT</span>
+    </header>
+
+    <!-- Main Auth Card -->
+    <main class="w-full max-w-sm bg-gpt-sidebar border border-gpt-border/80 rounded-2xl p-7 shadow-2xl">
+        <h1 class="text-2xl font-bold text-center text-white mb-2">Create an account</h1>
+        <p class="text-xs text-center text-gpt-muted mb-6">Sign up to start chatting and saving conversations</p>
+
+        {% if error %}
+        <div class="mb-4 p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+            <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'signup' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="username" class="block text-xs font-medium text-gpt-text mb-1">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    required
+                    autofocus
+                    placeholder="Choose a username"
+                    class="w-full bg-neutral-800 border border-gpt-border rounded-xl px-3.5 py-2.5 text-sm text-gpt-text placeholder-gpt-muted focus:outline-none focus:border-gpt-green transition"
+                >
+            </div>
+
+            <div>
+                <label for="password" class="block text-xs font-medium text-gpt-text mb-1">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    placeholder="Create a password (min 4 chars)"
+                    class="w-full bg-neutral-800 border border-gpt-border rounded-xl px-3.5 py-2.5 text-sm text-gpt-text placeholder-gpt-muted focus:outline-none focus:border-gpt-green transition"
+                >
+            </div>
+
+            <div>
+                <label for="confirm_password" class="block text-xs font-medium text-gpt-text mb-1">Confirm Password</label>
+                <input
+                    type="password"
+                    id="confirm_password"
+                    name="confirm_password"
+                    required
+                    placeholder="Re-enter your password"
+                    class="w-full bg-neutral-800 border border-gpt-border rounded-xl px-3.5 py-2.5 text-sm text-gpt-text placeholder-gpt-muted focus:outline-none focus:border-gpt-green transition"
+                >
+            </div>
+
+            <button
+                type="submit"
+                class="w-full py-2.5 px-4 bg-gpt-green hover:bg-gpt-greenHover text-white text-sm font-semibold rounded-xl transition duration-150 shadow-md flex items-center justify-center gap-2"
+            >
+                <span>Create Account</span>
+                <i class="fa-solid fa-user-plus text-xs"></i>
+            </button>
+        </form>
+
+        <div class="relative my-6 text-center">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-neutral-700"></div></div>
+            <span class="relative bg-gpt-sidebar px-3 text-xs text-gpt-muted uppercase tracking-wider">or</span>
+        </div>
+
+        <!-- Quick Demo Login Button -->
+        <a
+            href="{% url 'demo_login' %}"
+            class="w-full py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 border border-gpt-border text-white text-xs font-medium rounded-xl transition duration-150 flex items-center justify-center gap-2"
+        >
+            <i class="fa-solid fa-bolt text-amber-400"></i>
+            <span>Instant Demo Access</span>
+        </a>
+
+        <div class="mt-6 text-center text-xs text-gpt-muted">
+            Already have an account?
+            <a href="{% url 'login' %}" class="text-gpt-green hover:underline font-semibold ml-1">Log in</a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-[11px] text-gpt-muted">
+        <span>ChatGPT Clone &copy; 2026</span>
+    </footer>
+</body>
+</html>
