@@ -1,0 +1,39 @@
+{
+  "chunks": [
+    {
+      "filename": "titan_spec.txt",
+      "page": 1,
+      "chunk_index": 0,
+      "text": "Project Titan was developed in 2026 for automated intelligent workflows."
+    },
+    {
+      "filename": "acme_solar_2026.txt",
+      "page": 1,
+      "chunk_index": 0,
+      "text": "Acme Solar Technologies Annual Report 2026:\nExecutive Summary:\nAcme Solar Technologies is a pioneer in high-efficiency solar panel manufacturing.\nIn fiscal year 2026, the company generated 128 million dollars in revenue, an increase of 35 percent compared to 2025.\nThe primary revenue driver was our Helios-X residential solar kit, accounting for 62 percent of total sales.\nThe company expanded its manufacturing facility in Austin, Texas, creating 450 new engineering jobs.\nLooking ahead to 2027, Acme plans to launch commercial battery storage systems and target international markets in Europe and Japan."
+    },
+    {
+      "filename": "apollo_health_report.txt",
+      "page": 1,
+      "chunk_index": 0,
+      "text": "Apollo Health AI Platform:\nApollo Health is an AI platform built to analyze clinical laboratory results.\nIn 2026, Apollo Health secured 15 million USD in Series A venture funding led by Vertex Ventures.\nThe platform has processed over 2.4 million medical records with 99.2% diagnostic accuracy.\nDr. Sarah Lin is the Chief Medical Officer and founder."
+    }
+  ],
+  "documents": [
+    {
+      "filename": "titan_spec.txt",
+      "chunks_count": 1,
+      "file_size": 72
+    },
+    {
+      "filename": "acme_solar_2026.txt",
+      "chunks_count": 1,
+      "file_size": 609
+    },
+    {
+      "filename": "apollo_health_report.txt",
+      "chunks_count": 1,
+      "file_size": 352
+    }
+  ]
+}

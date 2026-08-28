@@ -1,0 +1,28 @@
+{
+  "chunks": [
+    {
+      "filename": "project_orion_spec.txt",
+      "page": 1,
+      "chunk_index": 0,
+      "text": "Project Orion: Autonomous AI Agents Platform\nDeveloped in 2026, Project Orion utilizes lightweight all-MiniLM-L6-v2 embedding models.\nOrion stores document vectors inside FAISS IndexFlatL2 for sub-millisecond similarity lookups.\nThe system connects to Google Gemini 2.0 Flash for accurate generative answers and source citing."
+    },
+    {
+      "filename": "test_alpha.txt",
+      "page": 1,
+      "chunk_index": 0,
+      "text": "Project Alpha was started in 2025."
+    }
+  ],
+  "documents": [
+    {
+      "filename": "project_orion_spec.txt",
+      "chunks_count": 1,
+      "file_size": 328
+    },
+    {
+      "filename": "test_alpha.txt",
+      "chunks_count": 1,
+      "file_size": 34
+    }
+  ]
+}

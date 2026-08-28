@@ -1,0 +1,5 @@
+
+Project Orion: Autonomous AI Agents Platform
+Developed in 2026, Project Orion utilizes lightweight all-MiniLM-L6-v2 embedding models.
+Orion stores document vectors inside FAISS IndexFlatL2 for sub-millisecond similarity lookups.
+The system connects to Google Gemini 2.0 Flash for accurate generative answers and source citing.

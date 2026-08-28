@@ -1,0 +1,6 @@
+
+Apollo Health AI Platform:
+Apollo Health is an AI platform built to analyze clinical laboratory results.
+In 2026, Apollo Health secured 15 million USD in Series A venture funding led by Vertex Ventures.
+The platform has processed over 2.4 million medical records with 99.2% diagnostic accuracy.
+Dr. Sarah Lin is the Chief Medical Officer and founder.
